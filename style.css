@@ -1,0 +1,39 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: black;
+}
+
+h1, label {
+  font-family:Georgia, 'Times New Roman', Times, serif;
+  text-align: center;
+  color: white;
+}
+
+canvas {
+  display: block;
+  margin: auto;
+}
+
+
+
+#inputFields {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 6px;
+}
+
+#inputFields label {
+  font-size: 18px;
+}
+
+#inputFields input {
+  font-family:'Courier New', Courier, monospace;
+}
+
+#startButton {
+  display: flex;
+  justify-content: center;
+  margin: 6px;
+}

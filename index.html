@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trayectoria</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+  </head>
+
+  <body>
+    <h1>Trayectoria de un proyectil</h1>
+    <div id="inputFields">
+      <label>Gravedad
+        <input id="gravity" type="number" value="9.8">
+      </label>
+      <label>Velocidad inicial
+        <input id="initialSpeed" type="number" value="50">
+      </label>
+      <label>Ángulo de lanzamiento
+        <input id="angle" type="number" value="45" markup="html">
+      </label>
+    </div>
+    <div id="startButton">
+      <button onclick="startTrajectory()">▶ Empezar trayectoria</button>
+    </div>
+    <script src="sketch.js"></script>
+  </body>
+</html>
