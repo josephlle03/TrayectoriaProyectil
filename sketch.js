@@ -43,6 +43,9 @@ function setup()
 	createCanvas(canvasWidth, canvasHeight).parent("panel-canvas");
 
 	frameRate(1200);
+
+	strokeJoin(ROUND);
+    strokeCap(ROUND);
 }
 
 function draw()
@@ -62,23 +65,24 @@ function draw()
 	closestPoint = null;
 
 	// FUNCIONALIDAD - Trayectoria y punto de inspección.
-	beginShape();
-	for (let point of trajectory)
+	for (let i = 0; i < trajectory.length - 1; i++)
 	{
+		let point01 = trajectory[i];
+		let point02 = trajectory[i + 1];
+
 		// RENDERIZADO - Trayectoria.
-		renderTrajectory(point);
+		renderTrajectory(point01, point02);
 		//
 		
 		// CÁLCULO - Punto de inspección
-		let d = dist(scaledMouseX, scaledMouseY, point.x, point.y) // d = distancia entre el mouse y cada punto de la trayectoria.
+		let d = dist(scaledMouseX, scaledMouseY, point01.x, point01.y) // d = distancia entre el mouse y cada punto de la trayectoria.
 		if (d < minDistance)
 		{
 			minDistance = d;
-			closestPoint = point;
+			closestPoint = point01;
 		}
 		//
 	}
-	endShape();
 	//
 
 	// FUNCIONALIDAD - Inspección.
@@ -96,7 +100,7 @@ function draw()
 	//
 	
 	// FUNCIONALIDAD - Altura máxima
-	if (!reachedMaxHeight && (maxHeight - yPos) < 0.001)
+	if (!reachedMaxHeight && (maxHeight - yPos) < 0.0009)
 	{
 		saveMaxHeight();
 	}
@@ -115,16 +119,17 @@ function draw()
 		let prevYPos = yPos;
 
 		updatePosition();
-		updateData();
 		
 		if (yPos <= 0 && prevYPos > 0)
 		{
 			handleGroundCollison();
 		}
-		else if (yPos > 0);
+		else if (yPos > 0)
 		{
 			savePosition();
 		}
+
+		updateData();
 	}
 	//
 }
@@ -156,6 +161,7 @@ function simulateTrajectory()
 	// Se crea un arreglo vacío para almacenar las posiciones del proyectil.
 	// Cada elemento en dicho arreglo será un objeto con las características x & y.
 	trajectory = [];
+	savePosition();
 
 	// Se ajusta el factor de escala.
 	scaleFactor = Math.min(canvasWidth / range, canvasHeight / maxHeight);
@@ -176,16 +182,16 @@ function simulateTrajectory()
 	isRunning = true;
 }
 
-function renderTrajectory(point)
+function renderTrajectory(point01, point02)
 {
 	push();
 	
 	stroke(255);
-	noFill();
+	strokeWeight(1 / scaleFactor);
 
-	vertex(point.x, point.y);
+	line(point01.x, point01.y, point02.x, point02.y);
 
-	pop();	
+	pop();
 }
 
 function renderProjectile()
@@ -206,7 +212,7 @@ function handleGroundCollison()
 
     const lastPoint = trajectory[trajectory.length - 1];
 
-    if (!lastPoint || (lastPoint.x.toFixed(2) !== range || lastPoint.y.toFixed(2) !== 0))
+    if (!lastPoint || (lastPoint.x.toFixed(3) !== range.toFixed(3) || lastPoint.y.toFixed(3) !== 0))
 	{
         trajectory.push({x: range, y: 0});
     }
@@ -223,8 +229,6 @@ function savePosition()
 
 function updatePosition()
 {
-	ySpeedPoint = ySpeed - gravity * time;
-
 	time += timeStep;
 
 	xPos = xSpeed * time;

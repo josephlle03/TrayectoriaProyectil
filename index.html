@@ -23,38 +23,56 @@
 
 		<div id="main">
 
-			<div id="panel-controls">
+			<div id="sub1">
+		
+				<div id="panel-controls">
+				
+					<div id="input-fields">
 
-				<div id="input-fields">
+						<label>Gravedad (m/s²)</label>
+						<select id="gravity">
+							<option value="9.8">Tierra (9.8)</option>
+							<option value="1.6">Luna (1.6)</option>
+							<option value="3.7">Mercurio (3.7)</option>
+							<option value="8.87">Venus (8.87)</option>
+							<option value="3.7">Marte (3.7)</option>
+							<option value="24.5">Júpiter (24.5)</option>
+							<option value="9">Saturno (9.0)</option>
+							<option value="8.7">Urano (8.7)</option>
+							<option value="11">Neptuno (11.0)</option>
+						</select>
 
-					<label>Gravedad (m/s²)</label>
-					<input id="gravity" type="number" value="9.8">
+						<label>Velocidad inicial (m/s)</label>
+						<input id="initial-speed" type="number" value="50">
 
-					<label>Velocidad inicial (m/s)</label>
-					<input id="initial-speed" type="number" value="50">
+						<label>Ángulo de lanzamiento (°)</label>
+						<input id="angle" type="number" value="45">
 
-					<label>Ángulo de lanzamiento (°)</label>
-					<input id="angle" type="number" value="45">
-					
+
+					</div>
+
+					<div id="button-start">
+						<button onclick="simulateTrajectory()">▶<br> Simular trayectoria</button>
+					</div>
 
 				</div>
 
-				<div id="button-start">
-					<button onclick="simulateTrajectory()">▶<br> Simular trayectoria</button>
+				<div id="panel-data">
+				
+					<label id="max-height">Altura máxima: 0</label>
+					<label id="range">Rango: 0</label>
+					<label id="inspection-x">X: 0</label>
+					<label id="inspection-y">Y: 0</label>
+				
 				</div>
+			
+			</div>
+				
+			<div id="sub2">
+
+				<div id="panel-canvas"></div>
 
 			</div>
-
-			<div id="panel-data">
-
-				<label id="max-height">Altura máxima: 0</label>
-				<label id="range">Rango: 0</label>
-				<label id="inspection-x">X: 0</label>
-				<label id="inspection-y">Y: 0</label>
-
-			</div>
-
-			<div id="panel-canvas"></div>
 
 		</div>
   
