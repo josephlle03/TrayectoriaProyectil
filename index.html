@@ -1,33 +1,63 @@
 <!DOCTYPE html>
+
 <html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Trayectoria</title>
+	<head>
 
-    <link rel="stylesheet" type="text/css" href="style.css">
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
-  </head>
+		<title>Trayectoria</title>
 
-  <body>
-    <h1>Trayectoria de un proyectil</h1>
-    <div id="inputFields">
-      <label>Gravedad
-        <input id="gravity" type="number" value="9.8">
-      </label>
-      <label>Velocidad inicial
-        <input id="initialSpeed" type="number" value="50">
-      </label>
-      <label>Ángulo de lanzamiento
-        <input id="angle" type="number" value="45" markup="html">
-      </label>
-    </div>
-    <div id="startButton">
-      <button onclick="startTrajectory()">▶ Empezar trayectoria</button>
-    </div>
-    <script src="sketch.js"></script>
-  </body>
+		<link rel="stylesheet" type="text/css" href="style.css">
+
+		<script src="libraries/p5.min.js"></script>
+		<script src="libraries/p5.sound.min.js"></script>
+		<script src="sketch.js"></script>
+
+	</head>
+
+	<body>
+
+		<h1>Trayectoria de un proyectil</h1>
+
+		<div id="main">
+
+			<div id="panel-controls">
+
+				<div id="input-fields">
+
+					<label>Gravedad (m/s²)</label>
+					<input id="gravity" type="number" value="9.8">
+
+					<label>Velocidad inicial (m/s)</label>
+					<input id="initial-speed" type="number" value="50">
+
+					<label>Ángulo de lanzamiento (°)</label>
+					<input id="angle" type="number" value="45">
+					
+
+				</div>
+
+				<div id="button-start">
+					<button onclick="simulateTrajectory()">▶<br> Simular trayectoria</button>
+				</div>
+
+			</div>
+
+			<div id="panel-data">
+
+				<label id="max-height">Altura máxima: 0</label>
+				<label id="range">Rango: 0</label>
+				<label id="inspection-x">X: 0</label>
+				<label id="inspection-y">Y: 0</label>
+
+			</div>
+
+			<div id="panel-canvas"></div>
+
+		</div>
+  
+	</body>
+
 </html>
