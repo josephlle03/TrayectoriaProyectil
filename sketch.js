@@ -95,13 +95,12 @@ function draw()
 	}
 	//
 	
-	console.log();
 	// FUNCIONALIDAD - Altura máxima
 	if (!reachedMaxHeight && (maxHeight - yPos) < 0.001)
 	{
 		saveMaxHeight();
 	}
-	else
+	else if (reachedMaxHeight)
 	{
 		// RENDERIZADO - Punto de altura máxima
 		renderMaxHeightPoint();
