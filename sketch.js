@@ -1,48 +1,60 @@
 
 
 
-// Valores de canvas
-const canvasWidth = 300;
-const canvasHeight = 300;
+let enableExperimentalFeatures = false;
 
-let scaleFactor;
-let scaledMouseX;
-let scaledMouseY;
 
+// Valores de área
+const canvasWidth = 400;
+const canvasHeight = 400;
+
+let scaleFactor
+let effectiveGridSpacing;
+
+let scaledMousePos;
+
+let pan = {x: 0, y: 0};
+let previousMouse;
+let isDragging = false;
+
+
+// Valores estéticos
 const projectileSize = 10;
 
-// Valores de inspección
+const gridColor = [100, 100, 100];
+const gridSpacing = 50;
+
+
+// Valores de lógica de inspección
 const inspectionSensibility = 5;
 let inspectionThreshold;
 
 let minDistance;
 let closestPoint;
 
-let pointMaxHeightX;
-let pointMaxHeightY;
+let pointMaxHeight;
 
 
-// Valores de simulación
-const timeStep = 0.025;
+// Valores de lógica de simulación
+let deltaY;
 
 let gravity, initialSpeed, angle;
-let xSpeed, ySpeed;
 let maxHeight, flightTime, range;
 
 let time;
-let xPos, yPos;
+let currentPos = {x: 0, y: 0}
 let trajectory = [];
 
 let reachedMaxHeight = false;
+let reachedGround = false;
 let isRunning = false;
-
 
 
 function setup()
 {
 	createCanvas(canvasWidth, canvasHeight).parent("panel-canvas");
 
-	frameRate(1200);
+	frameRate(240);
 
 	strokeJoin(ROUND);
     strokeCap(ROUND);
@@ -52,140 +64,247 @@ function draw()
 {
 	background(50);
 
+	push();
+
+	
+	if (enableExperimentalFeatures)
+	{
+		translate(pan.x, pan.y);
+	}
+
+
 	fill(255);
 	stroke(255);
+	strokeWeight(1 / scaleFactor);
 	noFill();
-	
+
+
 	translate(0, canvasHeight);
 	scale(scaleFactor, -scaleFactor);
 
-	scaledMouseX = mouseX / scaleFactor;
-	scaledMouseY = (canvasHeight - mouseY) / scaleFactor;
+
+	scaledMousePos =
+	{
+		x: (mouseX - pan.x) / scaleFactor,
+		y: (canvasHeight - (mouseY - pan.y)) / scaleFactor
+	};
+
 	minDistance = Infinity;
 	closestPoint = null;
 
-	// FUNCIONALIDAD - Trayectoria y punto de inspección.
-	for (let i = 0; i < trajectory.length - 1; i++)
+
+	if (enableExperimentalFeatures)
+	{
+		drawGrid();
+	}
+
+
+	for (let i = 0; i < trajectory.length; i++)
 	{
 		let point01 = trajectory[i];
-		let point02 = trajectory[i + 1];
-
-		// RENDERIZADO - Trayectoria.
-		renderTrajectory(point01, point02);
-		//
 		
-		// CÁLCULO - Punto de inspección
-		let d = dist(scaledMouseX, scaledMouseY, point01.x, point01.y) // d = distancia entre el mouse y cada punto de la trayectoria.
+		if (i < trajectory.length - 1)
+		{
+			let point02 = trajectory[i + 1];
+			renderTrajectory(point01, point02);
+		}
+
+		// d = distancia entre el mouse y cada punto de la trayectoria.
+		let d = dist(scaledMousePos.x, scaledMousePos.y, point01.x, point01.y)
 		if (d < minDistance)
 		{
 			minDistance = d;
 			closestPoint = point01;
 		}
-		//
 	}
-	//
 
-	// FUNCIONALIDAD - Inspección.
+
 	if (closestPoint && minDistance <= inspectionThreshold)
 	{
-		// RENDERIZADO - Punto de inspección y valores de inspección.
 		renderInspectionPoint(closestPoint);
 		updateInspectionValues(closestPoint);
-		//
 	}
 	else
 	{
 		clearInspectionValues();
 	}
-	//
-	
-	// FUNCIONALIDAD - Altura máxima
-	if (!reachedMaxHeight && (maxHeight - yPos) < 0.0009)
-	{
-		saveMaxHeight();
-	}
-	else if (reachedMaxHeight)
-	{
-		// RENDERIZADO - Punto de altura máxima
-		renderMaxHeightPoint();
-		//
-	}
-	//
 
-	// FUNCIONALIDAD - Proyectil.
-	renderProjectile();
+
+	if (reachedMaxHeight)
+	{
+		renderMaxHeightPoint();
+	}
+
+
 	if (isRunning)
 	{
-		let prevYPos = yPos;
-
-		updatePosition();
+		let previousPos = {...currentPos};
 		
-		if (yPos <= 0 && prevYPos > 0)
+		updatePosition();
+
+		deltaY = currentPos.y - previousPos.y;
+
+		if (!reachedMaxHeight && currentPos.y >= maxHeight - deltaY)
 		{
-			handleGroundCollison();
+			handleMaxHeight();
 		}
-		else if (yPos > 0)
+
+		if (currentPos.x > 0 && currentPos.y > 0)
 		{
 			savePosition();
+		}
+		else if (currentPos.y <= 0 && previousPos.y > 0)
+		{
+			handleGroundCollison();
 		}
 
 		updateData();
 	}
-	//
+	
+	renderProjectile();
+
+	pop();
+
+	if (enableExperimentalFeatures)
+	{
+		document.getElementById("button-reset-view").style.display = "block";
+	}
+	else
+	{
+		document.getElementById("button-reset-view").style.display = "none";
+	}
 }
 
-function simulateTrajectory()
+function startSimulation()
 {
 	// Se recuperan los valores ingresados por el usuario.
 	gravity = parseFloat(document.getElementById("gravity").value);
 	initialSpeed = parseFloat(document.getElementById("initial-speed").value);
-	angle = parseFloat(document.getElementById("angle").value);
-	angle *= Math.PI / 180;
+	angle = parseFloat(document.getElementById("angle").value) * Math.PI / 180;
 
-	// Se descompone la velocidad en sus componentes.
-	xSpeed = initialSpeed * Math.cos(angle);
-	ySpeed = initialSpeed * Math.sin(angle);
+	// Se desglosa la velocidad inicial en sus componentes.
+	initialSpeed =
+	{
+		x: initialSpeed * Math.cos(angle),
+		y: initialSpeed * Math.sin(angle)
+	};
 
-	// Se calculan la altura máxima, el tiempo de vuelo y el alcance horizontal
-	maxHeight = (ySpeed ** 2) / (gravity * 2);
-	flightTime = (ySpeed * 2) / gravity;
-	range = (xSpeed * flightTime);
+	// Se calculan la altura máxima, el tiempo de vuelo y el alcance horizontal.
+	maxHeight = (initialSpeed.y ** 2) / (gravity * 2);
+	flightTime = (initialSpeed.y * 2) / gravity;
+	range = (initialSpeed.x * flightTime);
+
+	// Se calcula delta de posición en eje Y sobre el intervalo de tiempo básico dentro de la simulación.
+	deltaY = 0;
 
 	// Se reestablece el tiempo.
 	time = 0;
 
 	// Se reestablece la posición del proyectil.
-	xPos = 0;
-	yPos = 0;
+	currentPos = {x: 0, y: 0};
 
-	// Se crea un arreglo vacío para almacenar las posiciones del proyectil.
+	// Se reestablece el arreglo de posiciones a lo largo de la trayectoria.
 	// Cada elemento en dicho arreglo será un objeto con las características x & y.
-	trajectory = [];
-	savePosition();
+	trajectory = [{x: 0, y: 0}];
 
-	// Se ajusta el factor de escala.
-	scaleFactor = Math.min(canvasWidth / range, canvasHeight / maxHeight);
+	// Se ajustan los factores de escala.
+	scaleFactor = Math.min(10, Math.min((canvasWidth / range), canvasHeight / (maxHeight)));
+	effectiveGridSpacing = gridSpacing / scaleFactor;
 
 	// Se ajusta la sensibilidad del punto de inspección.
 	inspectionThreshold = inspectionSensibility / scaleFactor;
-	
+
 	// Se reestablecen los valores informativos.
-	document.getElementById("max-height").innerText = "Altura máxima: 0";
-    document.getElementById("range").innerText = "Rango: 0"
-	document.getElementById("inspection-x").innerText = "X: 0";
-    document.getElementById("inspection-y").innerText = "Y: 0";
-	
+	document.getElementById("max-height").innerText = "Altura máxima: 0m";
+    document.getElementById("range").innerText = "Rango: 0m";
+	document.getElementById("time").innerText = "Tiempo: 0s";
+	document.getElementById("inspection-x").innerText = "X: 0m";
+    document.getElementById("inspection-y").innerText = "Y: 0m";
+
 	// Se reestablecen las banderas.
 	reachedMaxHeight = false;
+	reachedGround = false;
 
 	// Se inicia la simulación.
 	isRunning = true;
 }
 
+
+function mousePressed()
+{
+    if (enableExperimentalFeatures && mouseX >= 0 && mouseX <= canvasWidth && mouseY >= 0 && mouseY <= canvasHeight)
+	{
+        isDragging = true;
+        previousMouse = {x: mouseX, y: mouseY};
+    }
+}
+
+function mouseDragged()
+{
+	if (enableExperimentalFeatures)
+	{
+ 		if (isDragging)
+		{
+        	pan.x += mouseX - previousMouse.x;
+       		pan.y += mouseY - previousMouse.y;
+
+        	previousMouse.x = mouseX;
+        	previousMouse.y = mouseY;
+    	}
+	}
+}
+
+function mouseReleased()
+{
+	if (enableExperimentalFeatures)
+	{
+		isDragging = false;
+	}
+}
+
+
+function drawGrid()
+{
+    push();
+
+    stroke(gridColor);
+    strokeWeight(1 / scaleFactor);
+
+    let worldMin =
+	{
+		x: -pan.x / scaleFactor,
+		y: pan.y / scaleFactor
+	};
+
+    let worldMax = 
+	{
+		x: (canvasWidth - pan.x) / scaleFactor,
+		y: (pan.y + canvasHeight) / (scaleFactor)
+	};
+
+    worldMin.x = floor(worldMin.x / effectiveGridSpacing) * effectiveGridSpacing - effectiveGridSpacing;
+    worldMax.x = ceil(worldMax.x / effectiveGridSpacing) * effectiveGridSpacing + effectiveGridSpacing;
+    worldMin.y = floor(worldMin.y / effectiveGridSpacing) * effectiveGridSpacing - effectiveGridSpacing;
+    worldMax.y = ceil(worldMax.y / effectiveGridSpacing) * effectiveGridSpacing + effectiveGridSpacing;
+
+    for (let y = worldMin.y; y <= worldMax.y; y += effectiveGridSpacing)
+	{
+        line(worldMin.x, y, worldMax.x, y);
+    }
+
+    for (let x = worldMin.x; x <= worldMax.x; x += effectiveGridSpacing)
+	{
+        line(x, worldMin.y, x, worldMax.y);
+    }
+
+    pop();
+}
+
+
 function renderTrajectory(point01, point02)
 {
 	push();
-	
+
 	stroke(255);
 	strokeWeight(1 / scaleFactor);
 
@@ -197,54 +316,70 @@ function renderTrajectory(point01, point02)
 function renderProjectile()
 {
 	push();
-	
+
 	fill(255);
 	stroke(0);
-	
-	ellipse(xPos, yPos, projectileSize / scaleFactor, projectileSize / scaleFactor);
+	strokeWeight(0.5 / scaleFactor);
+
+	ellipse(currentPos.x, currentPos.y, projectileSize / scaleFactor, projectileSize / scaleFactor);
 
 	pop();
+}
+
+function handleMaxHeight()
+{
+	reachedMaxHeight = true;
+
+	time = flightTime / 2;
+
+	currentPos = {x: range / 2, y: maxHeight};
+
+	savePosition();
+
+	pointMaxHeight = {x: range / 2, y: maxHeight};
+
+	document.getElementById("max-height").innerText = `Altura máxima: ${currentPos.y.toFixed(3)}m`;
 }
 
 function handleGroundCollison()
 {
     isRunning = false;
+	reachedGround = true;
 
-    const lastPoint = trajectory[trajectory.length - 1];
+    currentPos = {x: range, y: 0};
 
-    if (!lastPoint || (lastPoint.x.toFixed(3) !== range.toFixed(3) || lastPoint.y.toFixed(3) !== 0))
-	{
-        trajectory.push({x: range, y: 0});
-    }
-   
-    xPos = range;
-    yPos = 0;
-}
-
-
-function savePosition()
-{
-	trajectory.push({x: xPos, y: yPos});
+	savePosition();
 }
 
 function updatePosition()
 {
-	time += timeStep;
+	time += deltaTime / 1000;
 
-	xPos = xSpeed * time;
-	yPos = ySpeed * time - 0.5 * gravity * time ** 2;
+	currentPos.x = initialSpeed.x * time;
+	currentPos.y = initialSpeed.y * time - 0.5 * gravity * time ** 2;
+}
+
+function savePosition()
+{
+	trajectory.push({x: currentPos.x, y: currentPos.y});
 }
 
 function updateData()
 {
-	if (xPos <= range)
+	document.getElementById("range").innerText = `Rango: ${currentPos.x.toFixed(3)}m`;
+
+	if (!reachedMaxHeight)
 	{
-		document.getElementById("range").innerText = `Rango: ${xPos.toFixed(3)}m`
+		document.getElementById("max-height").innerText = `Altura máxima: ${currentPos.y.toFixed(3)}m`;
 	}
-	
-	if (!reachedMaxHeight && yPos <= maxHeight)
+
+	if (reachedGround)
 	{
-		document.getElementById("max-height").innerText = `Altura máxima: ${yPos.toFixed(3)}m`
+		document.getElementById("time").innerText = `Tiempo: ${flightTime.toFixed(3)}s`;
+	}
+	else
+	{
+		document.getElementById("time").innerText = `Tiempo: ${time.toFixed(3)}s`;
 	}
 }
 
@@ -254,9 +389,9 @@ function renderInspectionPoint(point)
 
 	fill(255);
 	noStroke();
-	
+
 	ellipse(point.x, point.y, 5 / scaleFactor, 5 / scaleFactor);
-	
+
 	pop();
 }
 
@@ -273,21 +408,17 @@ function clearInspectionValues()
     document.getElementById("inspection-y").innerText = "Y: 0m";
 }
 
-function saveMaxHeight()
-{
-	reachedMaxHeight = true;
-	pointMaxHeightX = xPos;
-	pointMaxHeightY = yPos;
-}
-
 function renderMaxHeightPoint()
-{	
+{
 	push();
 
 	fill(255);
 	stroke(255, 0, 0);
-	
-	ellipse(pointMaxHeightX, pointMaxHeightY, 5 / scaleFactor, 5 / scaleFactor);
+	strokeWeight(1 / scaleFactor);
+
+	ellipse(pointMaxHeight.x, pointMaxHeight.y, 5 / scaleFactor, 5 / scaleFactor);
 
 	pop();
 }
+
+

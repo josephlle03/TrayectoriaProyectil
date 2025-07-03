@@ -20,17 +20,19 @@ label {
 
 #main,
 #sub1,
-#sub2 {
+#sub2,
+#sub3 {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 10px;
   margin-top: 20px;
 }
 
 #sub1,
-#sub2 {
+#sub2,
+#sub3 {
   flex-direction: column;
 }
 
@@ -47,22 +49,22 @@ label {
   min-width: 200px;
 }
 
-#input-fields {
+#input-variables {
   display: flex;
   flex-direction: column;
   width: 100%;
   padding: 0;
 }
 
-#input-fields label {
+#input-variables label {
   font-size: 1.1em;
   margin-bottom: 8px;
   width: 100%;
   text-align: left;
 }
 
-#input-fields input,
-#input-fields select {
+#input-variables input,
+#input-variables select {
   font-family: 'Fira Code', monospace;
   width: calc(100% - 20px);
   padding: 10px;
@@ -74,20 +76,22 @@ label {
   font-size: 1em;
 }
 
-#input-fields input:focus,
-#input-fields select:focus {
+#input-variables input:focus,
+#input-variables select:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-#button-start {
+#buttons {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   margin-top: 10px;
+  gap: 5px;
 }
 
-#button-start button {
+#buttons button {
   padding: 12px 25px;
   font-size: 1.1em;
   background-color: #007bff;
@@ -99,12 +103,12 @@ label {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-#button-start button:hover {
+#buttons button:hover {
   background-color: #0056b3;
   transform: translateY(-2px);
 }
 
-#button-start button:active {
+#buttons button:active {
   background-color: #004085;
   transform: translateY(0);
 }
